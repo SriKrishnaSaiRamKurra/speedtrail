@@ -1,0 +1,14 @@
+Date,Description,Paid By,Amount,Currency,Split Type,Split Details,Transaction Type
+2026-02-01,Cloud Hosting,Priya,120.00,USD,EQUAL,,EXPENSE
+01/03/2026,Office Supplies,priya,"1,250.00",INR,EQUAL,,EXPENSE
+Mar 14,Team Lunch,,4500.00,,EQUAL,,EXPENSE
+04/05/2026,Dinner Client,Rohan,3500.00,INR,EQUAL,,EXPENSE
+2026-06-15,Internet Bill,Priya,1500,INR,EQUAL,,EXPENSE
+2026-06-15,Internet Bill,Priya,1500,INR,EQUAL,,EXPENSE
+2026-02-12,Refund for flight ticket,Rohan,-850,INR,EQUAL,,
+2026-03-20,Settlement Priya to Rohan,Priya,2000,INR,EQUAL,,SETTLEMENT
+2026-04-10,Software License,Priya,0,INR,EQUAL,,EXPENSE
+2026-05-15,Shared Taxi,Rohan,600,INR,PERCENTAGE,"Rohan: 60, Priya: 30",EXPENSE
+2026-05-18,Cab Ride,Rohan,500,INR,EQUAL,"Rohan: 50, Priya: 50",EXPENSE
+2026-05-20,Catering,PRIYA,8000,INR,PERCENTAGE,"Priya: 50, Rohan: 50",EXPENSE
+2026-06-02,Timeline violation test,Meera,1200,INR,EQUAL,,EXPENSE

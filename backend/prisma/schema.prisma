@@ -1,0 +1,130 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  passwordHash  String         @map("password_hash")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  
+  memberships   GroupMember[]
+  paidExpenses  Expense[]      @relation("PaidBy")
+  shares        ExpenseShare[]
+  sentPayments  Settlement[]   @relation("FromUser")
+  rcvdPayments  Settlement[]   @relation("ToUser")
+
+  @@map("users")
+}
+
+model Group {
+  id        Int           @id @default(autoincrement())
+  name      String
+  createdAt DateTime      @default(now()) @map("created_at")
+  
+  members   GroupMember[]
+  expenses  Expense[]
+  settlements Settlement[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id        Int       @id @default(autoincrement())
+  groupId   Int       @map("group_id")
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime  @map("joined_at")
+  leftAt    DateTime? @map("left_at")
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+model Expense {
+  id              Int             @id @default(autoincrement())
+  groupId         Int             @map("group_id")
+  group           Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  description     String
+  amount          Decimal         @db.Decimal(12, 2)
+  currency        String          @default("INR")
+  paidByUserId    Int             @map("paid_by")
+  paidByUser      User            @relation("PaidBy", fields: [paidByUserId], references: [id])
+  expenseDate     DateTime        @map("expense_date")
+  splitType       String          @map("split_type") // EQUAL, PERCENTAGE, EXACT, SHARES
+  transactionType String          @default("EXPENSE") @map("transaction_type") // EXPENSE, REFUND
+  
+  // CSV tracking fields
+  importId        String?         @map("import_id")
+  rowNumber       Int?            @map("row_number")
+  originalPayer   String?         @map("original_payer")
+  needsReview     Boolean         @default(false) @map("needs_review")
+  duplicateFlag   Boolean         @default(false) @map("duplicate_flag")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  shares          ExpenseShare[]
+  anomalies       ImportAnomaly[]
+
+  @@map("expenses")
+}
+
+model ExpenseShare {
+  id              Int      @id @default(autoincrement())
+  expenseId       Int      @map("expense_id")
+  expense         Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  userId          Int      @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shareAmount     Decimal  @map("share_amount") @db.Decimal(12, 2)
+  sharePercentage Decimal? @map("share_percentage") @db.Decimal(5, 2)
+
+  @@unique([expenseId, userId])
+  @@map("expense_shares")
+}
+
+model Settlement {
+  id             Int      @id @default(autoincrement())
+  groupId        Int      @map("group_id")
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromUserId     Int      @map("from_user")
+  fromUser       User     @relation("FromUser", fields: [fromUserId], references: [id])
+  toUserId       Int      @map("to_user")
+  toUser         User     @relation("ToUser", fields: [toUserId], references: [id])
+  amount         Decimal  @db.Decimal(12, 2)
+  settlementDate DateTime @default(now()) @map("settlement_date")
+
+  @@map("settlements")
+}
+
+model ImportAnomaly {
+  id                 Int      @id @default(autoincrement())
+  importId           String   @map("import_id")
+  rowNumber          Int      @map("row_number")
+  anomalyType        String   @map("anomaly_type")
+  anomalyDescription String   @map("anomaly_description")
+  actionTaken        String   @map("action_taken")
+  severity           String   // INFO, WARNING, ERROR
+  expenseId          Int?     @map("expense_id")
+  expense            Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  resolved           Boolean  @default(false)
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("import_anomalies")
+}
+
+model ExchangeRate {
+  id            Int      @id @default(autoincrement())
+  fromCurrency  String   @map("from_currency")
+  toCurrency    String   @map("to_currency")
+  rate          Decimal  @db.Decimal(10, 6)
+  effectiveDate DateTime @map("effective_date")
+
+  @@unique([fromCurrency, toCurrency, effectiveDate])
+  @@map("exchange_rates")
+}
